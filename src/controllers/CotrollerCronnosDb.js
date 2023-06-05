@@ -20,7 +20,7 @@ const CreateUser = async function(req, res){
         emailValue = "invalid"
     }
     //Validação do Tipo de Usuário
-    if(DataBody.userType != null && DataBody.userType === 1 || DataBody.userType === 2){
+    if(DataBody.userType != null && DataBody.userType === "1" || DataBody.userType === "2"){
         userTypeValidation = true
         userTypeValue = DataBody.userType
     }else{
@@ -65,6 +65,17 @@ const CreateUser = async function(req, res){
     }
 };
 
+const SelectUser = async function(req, res){
+    const DataBody = req.body
+    emailValue = DataBody.email
+    const SelectUser = await ModalCronnosDb.SelectUser(DataBody);
+    return res.status(201).json({
+        status: "success",
+        message: SelectUser.msg
+    });
+}
+
 module.exports = {
-    CreateUser
+    CreateUser,
+    SelectUser
 };

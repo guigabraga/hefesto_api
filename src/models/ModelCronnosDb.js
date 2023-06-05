@@ -17,8 +17,7 @@ const CreateUser = async function(data){
     try{
         const CreateUser = await connection.execute(queryExecute)
         return {
-            "status": "success"
-            
+            "status": "success"   
         }
     }catch(error){
         return {
@@ -26,9 +25,26 @@ const CreateUser = async function(data){
             "msg": error
         }
     }
+};
 
+const SelectUser = async function(data){
+    const email = data.email;
+    const queryExecute = `SELECT COUNT(*) AS count FROM users WHERE email = '${email}'`;
+    try{
+        const SelectUser = await connection.execute(queryExecute)
+        return {
+            "status": "success",
+            "msg": SelectUser[0][0].count
+        }
+    }catch(error){
+        return {
+            "status": "error",
+            "msg": error
+        }
+    }
 };
 
 module.exports = {
-    CreateUser
+    CreateUser,
+    SelectUser
 };
