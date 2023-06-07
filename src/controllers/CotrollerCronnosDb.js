@@ -131,22 +131,61 @@ const SelectDataUser = async function(req, res){
     emailValue = DataBody.email
     const SelectDataUser = await ModalCronnosDb.SelectDataUser(DataBody)
     if(SelectDataUser.data[0][0] != undefined){
+        const dataSelect = {"idusers": SelectDataUser.data[0][0].idusers, "name": SelectDataUser.data[0][0].name, "email": SelectDataUser.data[0][0].email, "hashUser": SelectDataUser.data[0][0].hashUser}
         return res.status(201).json({
             status: "success",
-            data: SelectDataUser.data[0][0]
+            data: dataSelect
         })
     }else{
         return res.status(400).json({
-            status: "erro",
+            status: "error",
             data: "email nao localizado"
         })
     }
 
 }
 
+//Função para autenticar usuário
+const AuthUser = async function(req, res){
+    //Json com os parametros de email e pass:
+    const authUserData = req.body
+    //Resposta do Model:
+    const AuthUser = await ModalCronnosDb.AuthUser(authUserData)
+    //Condições para autenticação:
+    if(AuthUser.status === "success"){
+        //Condição para validar se existe dato a ser retornado:
+        if(AuthUser.data[0].length > 0){
+            //Retorno de sucesso:
+            return res.json({
+                status: "success",
+                msg: "usuario autenticado com sucesso",
+                token: AuthUser.data[0][0].hashUser,
+                auth: true
+            })
+        }else{
+            //Retorno de erro:
+            return res.json({
+                status: "error",
+                msg: "usuario nao validado",
+                token: false,
+                auth: false
+            })
+        }
+    }else{
+        //Retorno de erro:
+        return res.json({
+            status: "error",
+            msg: "erro ao acessar o banco de dados",
+            token: false,
+            auth: false
+        })
+    }
+}
+
 module.exports = {
     CreateUser,
     SelectUser,
     UpdatePass,
-    SelectDataUser
+    SelectDataUser,
+    AuthUser
 }

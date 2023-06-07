@@ -83,9 +83,37 @@ const SelectDataUser = async function(data){
     }
 }
 
+//Função para consultar no banco e autenticar o usuário:
+const AuthUser = async function(data){
+    //Parametros para autenticar:
+    const emailAuth = data.email
+    const passAuth = data.pass
+    const passHash = crypto.createHash('sha256').update(passAuth).digest();
+    const passUser = passHash.toLocaleString('hex')
+    //Query de SELECT no banco de dados:
+    const queryAuth = `SELECT * FROM users WHERE email = '${emailAuth}' AND pass = '${passUser}'`
+    try{
+        //Execução da query:
+        const AuthUser = await connection.execute(queryAuth)
+        //Retorno de sucesso:
+        return{
+            "status": "success",
+            "data": AuthUser
+        }
+    }catch(error){
+        //Retorno de erro:
+        return{
+            "status": "error",
+            "msg": error
+        }
+    }
+
+}
+
 module.exports = {
     CreateUser,
     SelectUser,
     UpdatePass,
-    SelectDataUser
+    SelectDataUser,
+    AuthUser
 };
