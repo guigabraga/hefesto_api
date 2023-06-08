@@ -147,39 +147,50 @@ const SelectDataUser = async function(req, res){
 
 //Função para autenticar usuário
 const AuthUser = async function(req, res){
-    //Json com os parametros de email e pass:
-    const authUserData = req.body
-    //Resposta do Model:
-    const AuthUser = await ModalCronnosDb.AuthUser(authUserData)
-    //Condições para autenticação:
-    if(AuthUser.status === "success"){
-        //Condição para validar se existe dato a ser retornado:
-        if(AuthUser.data[0].length > 0){
-            //Retorno de sucesso:
-            return res.json({
-                status: "success",
-                msg: "usuario autenticado com sucesso",
-                token: AuthUser.data[0][0].hashUser,
-                auth: true
-            })
+    try{
+        //Json com os parametros de email e pass:
+        const authUserData = req.body
+        //Resposta do Model:
+        const AuthUser = await ModalCronnosDb.AuthUser(authUserData)
+        //Condições para autenticação:
+        if(AuthUser.status === "success"){
+            //Condição para validar se existe dato a ser retornado:
+            if(AuthUser.data[0].length > 0){
+                //Retorno de sucesso:
+                return res.json({
+                    status: "success",
+                    msg: "usuario autenticado com sucesso",
+                    token: AuthUser.data[0][0].hashUser,
+                    auth: true
+                })
+            }else{
+                //Retorno de erro:
+                return res.json({
+                    status: "error",
+                    msg: "usuario nao validado",
+                    token: false,
+                    auth: false
+                })
+            }
         }else{
             //Retorno de erro:
             return res.json({
                 status: "error",
-                msg: "usuario nao validado",
+                msg: "erro ao acessar o banco de dados",
                 token: false,
                 auth: false
             })
         }
-    }else{
+    }catch(e){
         //Retorno de erro:
         return res.json({
             status: "error",
-            msg: "erro ao acessar o banco de dados",
+            msg: e,
             token: false,
             auth: false
         })
     }
+    
 }
 
 module.exports = {
