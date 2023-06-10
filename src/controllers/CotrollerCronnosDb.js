@@ -1,4 +1,5 @@
 const ModalCronnosDb = require('../models/ModelCronnosDb')
+const io = require('@pm2/io')
 
 //Função para criação de usuário
 const CreateUser = async function(req, res){
@@ -126,27 +127,38 @@ const UpdatePass = async function(req, res){
     }
 }
 
+//Função para buscar dados do usuário:
 const SelectDataUser = async function(req, res){
-    const DataBody = req.body
-    emailValue = DataBody.email
-    const SelectDataUser = await ModalCronnosDb.SelectDataUser(DataBody)
-    if(SelectDataUser.data[0][0] != undefined){
-        const dataSelect = {"idusers": SelectDataUser.data[0][0].idusers, "name": SelectDataUser.data[0][0].name, "email": SelectDataUser.data[0][0].email, "hashUser": SelectDataUser.data[0][0].hashUser}
-        return res.status(201).json({
-            status: "success",
-            data: dataSelect
-        })
-    }else{
+    try{
+        const DataBody = req.body
+        emailValue = DataBody.email
+        const SelectDataUser = await ModalCronnosDb.SelectDataUser(DataBody)
+        if(SelectDataUser.data[0][0] != undefined){
+            const dataSelect = {"idusers": SelectDataUser.data[0][0].idusers, "name": SelectDataUser.data[0][0].name, "email": SelectDataUser.data[0][0].email, "hashUser": SelectDataUser.data[0][0].hashUser}
+            return res.status(201).json({
+                status: "success",
+                data: dataSelect
+            })
+        }else{
+            return res.status(400).json({
+                status: "error",
+                data: "email nao localizado"
+            })
+        }
+    }catch(e){
         return res.status(400).json({
             status: "error",
-            data: "email nao localizado"
+            data: e
         })
     }
 
 }
 
-//Função para autenticar usuário
+//Função para autenticar usuário:
 const AuthUser = async function(req, res){
+    //Construção de data para log:
+    const date = new Date()
+    const dateInsert = date.toLocaleString('af-ZA', {timeZone: 'America/Sao_Paulo'})
     try{
         //Json com os parametros de email e pass:
         const authUserData = req.body
@@ -157,14 +169,17 @@ const AuthUser = async function(req, res){
             //Condição para validar se existe dato a ser retornado:
             if(AuthUser.data[0].length > 0){
                 //Retorno de sucesso:
+                console.log("date: " + dateInsert + " | status: success | msg: usuario autenticado com sucesso | token: " + AuthUser.data[0][0].hashUser +", auth: true | nameUser: " + AuthUser.data[0][0].name)
                 return res.json({
                     status: "success",
                     msg: "usuario autenticado com sucesso",
                     token: AuthUser.data[0][0].hashUser,
-                    auth: true
+                    auth: true,
+                    nameUser: AuthUser.data[0][0].name
                 })
             }else{
                 //Retorno de erro:
+                io.notifyError(new Error('AuthUser: Usuário não validado'))
                 return res.json({
                     status: "error",
                     msg: "usuario nao validado",
@@ -173,6 +188,7 @@ const AuthUser = async function(req, res){
                 })
             }
         }else{
+            io.notifyError(new Error('AuthUser: Erro ao acessar o banco de dados'))
             //Retorno de erro:
             return res.json({
                 status: "error",
@@ -182,15 +198,16 @@ const AuthUser = async function(req, res){
             })
         }
     }catch(e){
-        //Retorno de erro:
+        //Notificação no pm2
+        io.notifyError(new Error('AuthUser: ' + e))
         return res.json({
+            //Retorno de erro:
             status: "error",
             msg: e,
             token: false,
             auth: false
         })
-    }
-    
+    }  
 }
 
 module.exports = {
