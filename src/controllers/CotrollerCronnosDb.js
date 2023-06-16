@@ -151,7 +151,6 @@ const SelectDataUser = async function(req, res){
             data: e
         })
     }
-
 }
 
 //Função para autenticar usuário:
@@ -194,7 +193,8 @@ const AuthUser = async function(req, res){
                 status: "error",
                 msg: "erro ao acessar o banco de dados",
                 token: false,
-                auth: false
+                auth: false,
+                data: AuthUser
             })
         }
     }catch(e){

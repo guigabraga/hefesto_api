@@ -1,6 +1,10 @@
 const crypto = require('crypto')
 const connection = require('./connection')
 
+//Contrução de data:
+const date = new Date()
+const dateInsert = date.toLocaleString('af-ZA', {timeZone: 'America/Sao_Paulo'})
+
 const CreateUser = async function(data){
     const date = new Date()
     const name = data.name
@@ -95,6 +99,9 @@ const AuthUser = async function(data){
     try{
         //Execução da query:
         const AuthUser = await connection.execute(queryAuth)
+        //Insert na tabela de LOgs:
+        const objLogs = [AuthUser[0][0].hashUser, 'Login', `Usuário ${AuthUser[0][0].name}, autenticado e logado com sucesso!`]
+        await InsertLogs(objLogs)
         //Retorno de sucesso:
         return{
             "status": "success",
@@ -108,6 +115,17 @@ const AuthUser = async function(data){
         }
     }
 
+}
+
+//Função para isert de logs:
+const InsertLogs = async function(data){
+    const hash_user = data[0]
+    const title = data[1]
+    const description = data[2]
+    const preHashProtocol = crypto.createHash('md5').update(dateInsert).digest()
+    const hash_protocol = preHashProtocol.toLocaleString('hex')
+    const queryLogs = `INSERT INTO logs (date_insert, hash_user, title, description, hash_protocol) VALUES ('${dateInsert}', '${hash_user}', '${title}', '${description}', '${hash_protocol}')`
+    const InsertLogs = await connection.execute(queryLogs)
 }
 
 module.exports = {
