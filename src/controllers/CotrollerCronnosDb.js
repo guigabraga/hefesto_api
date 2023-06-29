@@ -1,6 +1,10 @@
 const ModalCronnosDb = require('../models/ModelCronnosDb')
 const io = require('@pm2/io')
 
+//Construção de data para log:
+const date = new Date()
+const dateInsert = date.toLocaleString('af-ZA', {timeZone: 'America/Sao_Paulo'})
+
 //Função para criação de usuário
 const CreateUser = async function(req, res){
     const DataBody = req.body
@@ -60,8 +64,7 @@ const CreateUser = async function(req, res){
             status: "error",
             name: nameValidation,
             email: emailValidation,
-            userType: userTypeValidation,
-            pass: passValidation
+            userType: userTypeValidation,Fluxo
         });
     }
 };
@@ -186,7 +189,7 @@ const AuthUser = async function(req, res){
                     auth: false
                 })
             }
-        }else{
+        }else{Fluxo
             io.notifyError(new Error('AuthUser: Erro ao acessar o banco de dados'))
             //Retorno de erro:
             return res.json({
@@ -210,10 +213,132 @@ const AuthUser = async function(req, res){
     }  
 }
 
+//Consultar Logs:
+const SelectLogs = async function(req, res){
+    try{
+        const SelectLogs = await ModalCronnosDb.SelectLogs()
+        return res.status(200).json({
+            status: 200,
+            success_error: "success",
+            message: "requisicao realizada com sucesso",
+            data: SelectLogs
+        })
+    }catch(e){
+        return res.status(400).json({
+            status: 400,
+            success_error: "error",
+            message: e.message,
+            data: false
+        })
+    }
+}
+
+//Insert de novo produto:
+const InsertProduct = async function(req, res){
+
+    try{
+        const InsertProductData = req.body
+    
+        if(InsertProductData.nameProduct && InsertProductData.brandProduct && InsertProductData.modelProduct && InsertProductData.description, InsertProductData.userToken){
+
+            const InsertProduct = await ModalCronnosDb.InsertProduct(InsertProductData)
+
+            if(InsertProduct.status === 'success'){
+                return res.status(201).json({
+                    status: "success",
+                    message: "requisicao realizada com sucesso",
+                    required:{
+                        data: true
+                    },
+                    response: {
+                        data: true
+                    }
+                }) 
+            }else{
+                return res.status(400).json({
+                    status: "error",
+                    message: "erro banco de dados",
+                    required:{
+                        data: true
+                    },
+                    response: {
+                        data: InsertProduct
+                    }
+                }) 
+            }
+        }else{
+            return res.status(400).json({
+                status: "error",
+                message: "erro nas informacoes enviadas",
+                required:{
+                    nameProduct: (InsertProductData.nameProduct && InsertProductData.nameProduct < 151 ? true : false),
+                    brandProduct: (InsertProductData.brandProduct && InsertProductData.brandProduct < 151 ? true : false),
+                    modelProduct: (InsertProductData.modelProduct && InsertProductData.modelProduct < 151 ? true : false),
+                    description: (InsertProductData.description && InsertProductData.description < 501 ? true : false)
+                },
+                response: {
+                    data: false
+                }
+            }) 
+        }
+    }catch(e){
+        return res.status(400).json({
+            status: "error",
+            message: "erro na requisicao",
+            required:{
+                data: false
+            },
+            response: {
+                data: e.message
+            }
+        })
+    }
+
+}
+
+//Buscar produtos:
+const SelectProduct = async function(req, res){
+
+    const dataSelectProduct = req.body
+
+    try{
+
+        const SelectProduct = await ModalCronnosDb.SelectProduct(dataSelectProduct)
+
+        return res.status(201).json({
+            status: "success",
+            message: "requisicao realizada com sucesso",
+            required:{
+                data: true
+            },
+            response: {
+                data: SelectProduct
+            }
+        })
+
+    }catch(e){
+
+        return res.status(400).json({
+            status: "error",
+            message: "erro na requisicao",
+            required:{
+                data: false
+            },
+            response: {
+                data: e.message
+            }
+        })
+
+    }
+}
+
 module.exports = {
     CreateUser,
     SelectUser,
     UpdatePass,
     SelectDataUser,
-    AuthUser
+    AuthUser,
+    SelectLogs,
+    InsertProduct,
+    SelectProduct
 }
